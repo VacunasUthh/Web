@@ -9,16 +9,13 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabSelected(newValue);
-    setErrorMessage('');
   };
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErrorMessage('');
     if (email && password) {
       try {
         const response = await fetch(`https://vaccinationapi.vercel.app/auth/loginWeb`, {
@@ -51,7 +48,6 @@ const Login: React.FC = () => {
   
   const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErrorMessage('');
     if (email && password) {
       try {
         const response = await fetch(`${API_URL}/auth/message`, {
