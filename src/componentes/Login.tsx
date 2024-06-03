@@ -2,28 +2,81 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Tabs, Tab, Container, TextField, Button } from '@mui/material';
 import BackgroundScreen from './BackgroundScreen';
+import { API_URL } from "../utils/constants";
 
 const Login: React.FC = () => {
   const [tabSelected, setTabSelected] = useState(0);
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabSelected(newValue);
+    setErrorMessage('');
   };
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (username && password) {
-      navigate('/welcome');
+    setErrorMessage('');
+    if (email && password) {
+      try {
+        const response = await fetch(`https://vaccinationapi.vercel.app/auth/loginWeb`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          alert('Inicio de sesión exitoso.');
+          localStorage.setItem('token', data.token);
+          navigate('/welcome');
+        } else {
+          const data = await response.json();
+          alert('Error en el inicio de sesión');
+          if (data.message === 'Acceso denegado para pacientes.') {
+            alert('Acceso denegado: No tienes permiso para ingresar como paciente.');
+          } else {
+            console.log(data.message || 'Error al iniciar sesión');
+          }
+        }
+      } catch (error) {
+        console.log('Error en la solicitud de inicio de sesión: ' + error);
+      }
     }
   };
-
-  const handleRegister = (event: React.FormEvent) => {
+  
+  const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('Registered:', { username, password });
+    setErrorMessage('');
+    if (email && password) {
+      try {
+        const response = await fetch(`${API_URL}/auth/message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          alert('Respuesta del servidor: ' + data.message);
+        } else {
+          const errorData = await response.json();
+          alert(errorData.message || 'Error al registrarse');
+        }
+      } catch (error) {
+        alert('Error al conectar con el servidor: ' + error);
+      }
+    }
   };
+  
+  
+  
 
   return (
     <BackgroundScreen>
@@ -58,12 +111,12 @@ const Login: React.FC = () => {
           {tabSelected === 0 && (
             <form onSubmit={handleLogin}>
               <TextField
-                label="Username"
+                label="Email"
                 variant="outlined"
                 fullWidth
                 margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
               <TextField
                 label="Password"
@@ -86,8 +139,8 @@ const Login: React.FC = () => {
                 variant="outlined"
                 fullWidth
                 margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
               <TextField
                 label="Password"
