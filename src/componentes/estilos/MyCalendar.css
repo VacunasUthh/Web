@@ -1,0 +1,34 @@
+.react-calendar {
+    width: 100%;
+    max-width: 600px; 
+    margin: 0 auto;
+    font-size: 1.2rem; 
+  }
+  
+  .applied-vaccine {
+    background: lightgreen !important;
+    border-radius: 50%;
+  }
+  
+  .pending-vaccine {
+    background: lightcoral !important;
+    border-radius: 50%;
+  }
+  
+  .react-calendar__tile {
+    height: 70px !important; 
+  }
+  
+  .calendar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+    width: 100%;
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+  

@@ -8,7 +8,7 @@ const { Header, Content, Sider, Footer } = Layout;
 
 const items1: MenuProps['items'] = [
   { key: '1', label: <Link to="/welcome">Home</Link> },
-  { key: '2', label: <Link to="/campaign">Campaña</Link> },
+  { key: '2', label: <Link to="/calendar">Campaña</Link> },
   { key: '3', label: <Link to="/appointments">Citas</Link> },
 ];
 
