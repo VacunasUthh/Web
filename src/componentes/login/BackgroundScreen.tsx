@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Box } from '@mui/material';
-import backgroundImg from '../image/Fondo.png';
+import backgroundImg from '../../image/Fondo.png';
 
 interface BackgroundScreenProps {
   children: ReactNode;
@@ -20,16 +20,16 @@ const BackgroundScreen: React.FC<BackgroundScreenProps> = ({ children }) => {
         overflow: 'hidden',
       }}
     >
-      <Box
-        component="img"
+      <img
         src={backgroundImg}
-        sx={{
+        style={{
           position: 'absolute',
           width: '100%',
           height: '100%',
           top: 0,
           left: 0,
           zIndex: 1,
+          filter: 'blur(5px)', // Ejemplo de desenfoque de 5px
         }}
       />
       <Box
@@ -37,9 +37,12 @@ const BackgroundScreen: React.FC<BackgroundScreenProps> = ({ children }) => {
           position: 'relative',
           zIndex: 2,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'below',
           justifyContent: 'center',
           width: '100%',
+          maxWidth: '100%', // Limitar el ancho máximo
+          height: '90%', // Limitar la altura
+          overflowY: 'auto', // Permitir desplazamiento vertical
         }}
       >
         {children}

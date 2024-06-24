@@ -1,14 +1,15 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Layout, Menu, theme } from 'antd';
-import { UserOutlined, LaptopOutlined, NotificationOutlined } from '@ant-design/icons';
+import { UserOutlined, LaptopOutlined, NotificationOutlined, CalendarOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 
 const { Header, Content, Sider, Footer } = Layout;
 
 // Actualización de items1 con las nuevas rutas y nombres
 const items1: MenuProps['items'] = [
-  { key: '1', label: <Link to="/welcome">Inicio</Link> },
+  { key: '1', label: <Link to="/main">Inicio</Link> },
+  { key: '2', label: <Link to="/">Cerrar sesion</Link> },
 ];
 
 // Actualización de items2 con las nuevas rutas y nombres
@@ -19,16 +20,16 @@ const items2: MenuProps['items'] = [
     label: 'Pacientes',
     children: [
       { key: '1', label: <Link to="/parentsTable">Seleccion pacientes</Link> },
-      { key: '2', label: <Link to="/calendar">Lista</Link> },
+      { key: '2', label: <Link to="/parentsList">Lista</Link> },
     ],
   },
   {
     key: 'sub2',
-    icon: React.createElement(LaptopOutlined),
+    icon: React.createElement(CalendarOutlined),
     label: 'Vacunas',
     children: [
-      { key: '3', label: <Link to="/calendar">Calendario</Link> },
-      { key: '4', label: <Link to="/devices/add">Historial</Link> },
+      { key: '3', label: <Link to="/calendarList">Calendario</Link> },
+      { key: '4', label: <Link to="/calendar">Historial</Link> },
       { key: '5', label: <Link to="/devices/settings">Campañas</Link> },
     ],
   },
@@ -43,7 +44,7 @@ const items2: MenuProps['items'] = [
   },
   {
     key: 'sub4',
-    icon: React.createElement(NotificationOutlined),
+    icon: React.createElement(SettingOutlined),
     label: 'Configuración',
     children: [
       { key: '8', label: <Link to="/perfil">Perfil</Link> },
@@ -93,7 +94,7 @@ const MainLayout: React.FC = () => {
             <Outlet />
           </Content>
           <Footer style={{ textAlign: 'center', flexShrink: 0 }}>
-            Ant Design ©{new Date().getFullYear()} Created by Ant UED
+            <Link to="/faq">Preguntas frecuentes</Link>
           </Footer>
         </Layout>
       </Layout>

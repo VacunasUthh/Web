@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { API_URL } from "../../utils/constants";
 
 interface Child {
   childId: string;
@@ -22,9 +23,10 @@ interface DataType {
 
 const ParentsTable: React.FC = () => {
   const [data, setData] = useState<DataType[]>([]);
+  const nurseEmail = localStorage.getItem('email'); 
 
   useEffect(() => {
-    fetch('https://vaccinationapi.vercel.app/parents')
+    fetch(`${API_URL}/parents/unassigned`)
       .then(response => response.json())
       .then(parents => {
         const formattedData = parents.map((parent: Parent) => ({
@@ -60,10 +62,33 @@ const ParentsTable: React.FC = () => {
     },
   ];
 
-  const handleSelect = (parentId: string, childrenIds: string) => {
-    console.log('Selected Parent ID:', parentId);
-    console.log('Selected Children IDs:', childrenIds);
+  const handleSelect = async (parentId: string, childrenIds: string) => {
+    const nurseEmail = localStorage.getItem('email');
+    console.log(parentId);
+    console.log(nurseEmail);
+    try {
+      const response = await fetch(`${API_URL}/parents/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ parentId, nurseEmail }),
+      });
+  
+      if (response.ok) {
+        alert('Asignación exitosa.');
+        setData(data.filter(item => item.key !== parentId));
+      } else {
+        const errorData = await response.json();
+        console.error('Error en la asignación:', errorData);
+        alert('Error en la asignación: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de asignación: ' + error);
+    }
   };
+
+  
 
   return (
     <Table
