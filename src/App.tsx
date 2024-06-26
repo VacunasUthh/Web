@@ -6,6 +6,8 @@ import ParentsList from './componentes/pacients/pacientList';
 import CalendarList from './componentes/calendar/calendarList';
 import FAQ from './componentes/FAQ';
 import Login from './componentes/login/Login';
+import ListHistorial from './componentes/calendar/history';
+
 
 const App: React.FC = () => {
   return (
@@ -18,6 +20,7 @@ const App: React.FC = () => {
           <Route path="parentsList" element={<ParentsList />} />
           <Route path="calendarList" element={<CalendarList />} />
           <Route path="faq" element={<FAQ />} />
+          <Route path="historial" element={<ListHistorial />} />
           <Route path="" element={<Navigate to="main" replace />} />
         </Route>
       </Routes>

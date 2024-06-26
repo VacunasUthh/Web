@@ -43,6 +43,8 @@ const BackgroundScreen: React.FC<BackgroundScreenProps> = ({ children }) => {
           maxWidth: '100%', // Limitar el ancho máximo
           height: '90%', // Limitar la altura
           overflowY: 'auto', // Permitir desplazamiento vertical
+          fontFamilyy: 'Arial, sans-serif',
+          textAlign: 'center',
         }}
       >
         {children}

@@ -29,7 +29,7 @@ const items2: MenuProps['items'] = [
     label: 'Vacunas',
     children: [
       { key: '3', label: <Link to="/calendarList">Calendario</Link> },
-      { key: '4', label: <Link to="/calendar">Historial</Link> },
+      { key: '4', label: <Link to="/historial">Historial</Link> },
       { key: '5', label: <Link to="/devices/settings">Campañas</Link> },
     ],
   },
