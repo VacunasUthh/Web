@@ -7,6 +7,7 @@ import CalendarList from './componentes/calendar/calendarList';
 import FAQ from './componentes/FAQ';
 import Login from './componentes/login/Login';
 import ListHistorial from './componentes/calendar/history';
+import TabRegister from './componentes/login/TabRegister';
 
 
 const App: React.FC = () => {
@@ -14,6 +15,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<TabRegister />} />
         <Route path="/*" element={<MainLayout />}>
           <Route path="main" element={<div>Inicio</div>} />
           <Route path="parentsTable" element={<ParentsTable />} />

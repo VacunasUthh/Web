@@ -1,56 +1,51 @@
-import React, { ReactNode } from 'react';
-import { Box } from '@mui/material';
-import backgroundImg from '../../image/Fondo.png';
+
+import React, { ReactNode } from "react";
+import img from '../../image/Fondo.png';
 
 interface BackgroundScreenProps {
-  children: ReactNode;
+    children?: ReactNode;
 }
 
 const BackgroundScreen: React.FC<BackgroundScreenProps> = ({ children }) => {
-  return (
-    <Box
-      sx={{
-        position: 'relative',
-        height: '100vh',
-        width: '100vw',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#DBEFED',
-        overflow: 'hidden',
-      }}
-    >
-      <img
-        src={backgroundImg}
-        style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          top: 0,
-          left: 0,
-          zIndex: 1,
-          filter: 'blur(5px)', // Ejemplo de desenfoque de 5px
-        }}
-      />
-      <Box
-        sx={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          alignItems: 'below',
-          justifyContent: 'center',
-          width: '100%',
-          maxWidth: '100%', // Limitar el ancho máximo
-          height: '90%', // Limitar la altura
-          overflowY: 'auto', // Permitir desplazamiento vertical
-          fontFamilyy: 'Arial, sans-serif',
-          textAlign: 'center',
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
-  );
+    return (
+        <div style={{ 
+            display: 'flex',
+            flexDirection: 'row',  
+            alignItems: 'stretch', 
+            background:  '#f0f0f0',
+        }}>
+            <div style={{
+                flex: 1,              // Que ocupe todo el espacio restante
+                position: 'relative'  // Permitir posicionar el contenido
+            }}>
+                {children}
+            </div>
+            <div style={{
+                flex: 1,                      // Que ocupe la mitad derecha
+                position: 'relative',         // Permitir posicionar la imagen
+                overflow: 'hidden',           // Evitar que la imagen se desborde del contenedor
+                display: 'flex',              // Alinear la imagen
+                alignItems: 'center',         // Centrar verticalmente la imagen
+                justifyContent: 'center'      // Centrar horizontalmente la imagen
+            }}>
+                <img 
+                    src={img} 
+                    alt="Fondo" 
+                    style={{ 
+                        minWidth: '100%',      // Asegurar que la imagen tenga al menos el ancho del contenedor
+                        minHeight: '100%',     // Asegurar que la imagen tenga al menos la altura del contenedor
+                        width: 'auto',         // Permitir que la imagen se ajuste de manera responsiva
+                        height: 'auto',        // Permitir que la imagen se ajuste de manera responsiva
+                        filter: 'blur(1px)',   // Aplicar desenfoque a la imagen
+                        position: 'absolute',  // Posicionar de manera absoluta para ajustes finos
+                        left: 0,
+                        top: 0,
+                        zIndex: 1             // Colocar detrás del contenido principal
+                    }} 
+                />
+            </div>
+        </div>
+    );
 };
 
 export default BackgroundScreen;

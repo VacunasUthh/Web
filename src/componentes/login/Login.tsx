@@ -1,77 +1,101 @@
-import React, { useState } from 'react';
-import TabLogin from './TabLogin';
-import TabRegister from './TabRegister';
-
+import React, { useState } from "react";
+import { Button, Checkbox, Form, Input, Typography } from "antd";
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import imgenfe from '../../image/user.png';
 import BackgroundScreen from './BackgroundScreen';
-import { styles } from '../../styles/login.style'; // Importa los estilos
+const { Text, Title, Link } = Typography;
+import { useNavigate } from 'react-router-dom';
 
-const Login: React.FC = () => {
-    const [selectedTab, setSelectedTab] = useState<'login' | 'register'>('login');
+const TabLogin: React.FC = () => {
+    const navigate = useNavigate();
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+
+    const handleLogin = async (values: any) => { // Adjusted to accept values from the form
+        const { username, password } = values; // Destructure username and password from values
+        if (username && password) { // Ensure username and password are not empty
+            try {
+                const response = await fetch(`https://vaccinationapi.vercel.app/users/loginWeb`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: username, password }),
+                });
+        
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('Inicio de sesión exitoso.');
+                    localStorage.setItem('email', data.email);
+                    navigate('/main'); // Navigate to main page on successful login
+                } else {
+                    const data = await response.json();
+                    alert('Error en el inicio de sesión');
+                    if (data.message === 'Acceso denegado para pacientes.') {
+                        alert('Acceso denegado: No tienes permiso para ingresar como paciente.');
+                    } else {
+                        console.log(data.message || 'Error al iniciar sesión');
+                    }
+                }
+            } catch (error) {
+                console.log('Error en la solicitud de inicio de sesión: ' + error);
+            }
+        }
+    };
 
     return (
         <BackgroundScreen>
-            {/* Contenedor principal */}
-            <div style={{ ...styles.containerTabs, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                {/* Título de la empresa */}
-                <h1 style={{ fontFamily: "'Roboto Slab', serif", fontSize: '39px', color: '#333', marginBottom: '20px' }}>
-                    Sistema Vacunas
-                </h1>
-                {/* Contenedor para la pestaña */}
-                <div style={{
-                    background: 'linear-gradient(to bottom right, #3193e4e3,#FFF)', // Degradado de azul claro a azul medio que combina con un fondo de figuras hospitalarias azules
-                    width: '100%', // Ajusta el ancho del contenedor de las pestañas
-                    maxWidth: '600px', // Máximo ancho para mantener la legibilidad y el diseño responsivo
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '20px', // Incrementa el padding para mayor espacio interno
-                    borderRadius: '10px',
-                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-                }}>
-                    {/* Componente de pestañas */}
-                    <div className="tab-header" style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-                        <button
-                            onClick={() => setSelectedTab('login')}
-                            className={`tab-button ${selectedTab === 'login' ? 'active' : ''}`}
-                            style={{
-                                padding: '10px 80px', // Aumenta el padding para hacer los botones más grandes
-                                cursor: 'pointer',
-                                backgroundColor: selectedTab === 'login' ? '#003268c7' : '#FFF',
-                                color: selectedTab === 'login' ? '#FFF' : '#003268c7',
-                                border: 'none',
-                                outline: 'none',
-                                fontWeight: 'bold',
-                                borderRadius: '5px 0 0 5px',
-                                fontSize: '16px', // Ajusta el tamaño del texto
-                            }}
-                        >
-                            Inicio Sesión
-                        </button>
-                        <button
-                            onClick={() => setSelectedTab('register')}
-                            className={`tab-button ${selectedTab === 'register' ? 'active' : ''}`}
-                            style={{
-                                padding: '10px 80px', // Aumenta el padding para hacer los botones más grandes
-                                cursor: 'pointer',
-                                backgroundColor: selectedTab === 'register' ? '#003268c7' : '#FFF',
-                                color: selectedTab === 'register' ? '#FFF' : '#003268c7',
-                                border: 'none',
-                                outline: 'none',
-                                fontWeight: 'bold',
-                                borderRadius: '0 5px 5px 0',
-                                fontSize: '16px', // Ajusta el tamaño del texto
-                            }}
-                        >
-                            Registro
-                        </button>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <div style={{ width: '80%', maxWidth: '550px' }}>
+                    <img src={imgenfe} alt="User" style={{ width: '100px', height: '100px', marginBottom: '20px', display: 'block', margin: '0 auto' }} />
+                    <Title level={2} style={{ margin: 10, textAlign: 'center' }}>¡Bienvenido al sistema!</Title>
+                    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                        <Text>Accede y gestiona vacunaciones con facilidad.</Text>
                     </div>
-                    {/* Contenido dinámico según la pestaña seleccionada */}
-                    {selectedTab === 'login' ? <TabLogin /> : <TabRegister />}
+                    <Form
+                        name="normal_login"
+                        initialValues={{ remember: true }}
+                        onFinish={handleLogin} // Use handleLogin directly for onFinish
+                        layout="vertical"
+                        requiredMark="optional"
+                        style={{ width: '100%' }}
+                    >
+                        <Text>Usuario: </Text>
+                        <Form.Item
+                            name="username"
+                            rules={[{ required: true, message: "Por favor ingresa tu usuario" }]}
+                        >
+                            <Input prefix={<UserOutlined />} placeholder="Usuario" />
+                        </Form.Item>
+                        <Text>Contraseña:</Text>
+                        <Form.Item
+                            name="password"
+                            rules={[{ required: true, message: "Por favor ingresa tu contraseña" }]}
+                        >
+                            <Input.Password prefix={<LockOutlined />} placeholder="Contraseña" />
+                        </Form.Item>
+                        <Form.Item>
+                            <Form.Item name="remember" valuePropName="checked" noStyle>
+                                <Checkbox>Recordar</Checkbox>
+                            </Form.Item>
+                            <Link href="/" style={{ float: "right" }}>
+                                ¿Olvidaste tu contraseña?
+                            </Link>
+                        </Form.Item>
+                        <Form.Item style={{ marginBottom: "0px" }}>
+                            <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
+                                Iniciar sesión
+                            </Button>
+                            <div style={{ marginTop: "16px", textAlign: "center" }}>
+                                <Text>¿No tienes una cuenta? </Text>
+                                <Link href="register">Regístrate ahora</Link>
+                            </div>
+                        </Form.Item>
+                    </Form>
                 </div>
             </div>
         </BackgroundScreen>
     );
 };
 
-export default Login;
+export default TabLogin;
