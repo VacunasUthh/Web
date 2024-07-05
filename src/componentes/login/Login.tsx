@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-import { Button, Checkbox, Form, Input, Typography } from "antd";
+import { Button, Checkbox, Form, Input, Typography, message } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import imgenfe from '../../image/user.png';
 import BackgroundScreen from './BackgroundScreen';
+import { useAuth } from './../AuthContext'; // Ajusta la ruta según corresponda
 const { Text, Title, Link } = Typography;
-import { useNavigate } from 'react-router-dom';
 
 const TabLogin: React.FC = () => {
-    const navigate = useNavigate();
+    const { login } = useAuth();
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
-    const handleLogin = async (values: any) => { // Adjusted to accept values from the form
-        const { username, password } = values; // Destructure username and password from values
-        if (username && password) { // Ensure username and password are not empty
+    const handleLogin = async (values: any) => {
+        const { username, password } = values;
+        if (username && password) {
             try {
                 const response = await fetch(`https://vaccinationapi.vercel.app/users/loginWeb`, {
                     method: 'POST',
@@ -22,23 +22,21 @@ const TabLogin: React.FC = () => {
                     },
                     body: JSON.stringify({ email: username, password }),
                 });
-        
+
                 if (response.ok) {
                     const data = await response.json();
-                    alert('Inicio de sesión exitoso.');
-                    localStorage.setItem('email', data.email);
-                    navigate('/main'); // Navigate to main page on successful login
+                    login(data.email, data._id);
+                    message.success('Inicio de sesión exitoso.');
                 } else {
                     const data = await response.json();
-                    alert('Error en el inicio de sesión');
                     if (data.message === 'Acceso denegado para pacientes.') {
-                        alert('Acceso denegado: No tienes permiso para ingresar como paciente.');
+                        message.error('Acceso denegado: No tienes permiso para ingresar como paciente.');
                     } else {
-                        console.log(data.message || 'Error al iniciar sesión');
+                        message.error(data.message || 'Error al iniciar sesión');
                     }
                 }
             } catch (error) {
-                console.log('Error en la solicitud de inicio de sesión: ' + error);
+                message.error('Error en la solicitud de inicio de sesión: ' + error);
             }
         }
     };
@@ -55,7 +53,7 @@ const TabLogin: React.FC = () => {
                     <Form
                         name="normal_login"
                         initialValues={{ remember: true }}
-                        onFinish={handleLogin} // Use handleLogin directly for onFinish
+                        onFinish={handleLogin}
                         layout="vertical"
                         requiredMark="optional"
                         style={{ width: '100%' }}

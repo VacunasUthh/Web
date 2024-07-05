@@ -3,60 +3,63 @@ import { Outlet, Link } from 'react-router-dom';
 import { Layout, Menu, theme } from 'antd';
 import { UserOutlined, LaptopOutlined, NotificationOutlined, CalendarOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import { useAuth } from './AuthContext'; // Ajusta la ruta según corresponda
 
 const { Header, Content, Sider, Footer } = Layout;
-
-// Actualización de items1 con las nuevas rutas y nombres
-const items1: MenuProps['items'] = [
-  { key: '1', label: <Link to="/main">Inicio</Link> },
-  { key: '2', label: <Link to="/">Cerrar sesion</Link> },
-];
-
-// Actualización de items2 con las nuevas rutas y nombres
-const items2: MenuProps['items'] = [
-  {
-    key: 'sub1',
-    icon: React.createElement(UserOutlined),
-    label: 'Pacientes',
-    children: [
-      { key: '1', label: <Link to="/parentsTable">Seleccion pacientes</Link> },
-      { key: '2', label: <Link to="/parentsList">Lista</Link> },
-    ],
-  },
-  {
-    key: 'sub2',
-    icon: React.createElement(CalendarOutlined),
-    label: 'Vacunas',
-    children: [
-      { key: '3', label: <Link to="/calendarList">Calendario</Link> },
-      { key: '4', label: <Link to="/historial">Historial</Link> },
-      { key: '5', label: <Link to="/devices/settings">Campañas</Link> },
-    ],
-  },
-  {
-    key: 'sub3',
-    icon: React.createElement(NotificationOutlined),
-    label: 'Reportes',
-    children: [
-      { key: '6', label: <Link to="/alerts">Vacunas</Link> },
-      { key: '7', label: <Link to="/alerts/settings">Tutores</Link> },
-    ],
-  },
-  {
-    key: 'sub4',
-    icon: React.createElement(SettingOutlined),
-    label: 'Configuración',
-    children: [
-      { key: '8', label: <Link to="/perfil">Perfil</Link> },
-      { key: '9', label: <Link to="/alerts/settings">Preferencias de notificacion</Link> },
-    ],
-  },
-];
 
 const MainLayout: React.FC = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const items1: MenuProps['items'] = [
+    { key: '1', label: <Link to="/main">Inicio</Link> },
+    { key: '2', label: <span onClick={handleLogout}>Cerrar sesión</span> }, // Cambiado a span para manejar el evento de click
+  ];
+
+  const items2: MenuProps['items'] = [
+    {
+      key: 'sub1',
+      icon: React.createElement(UserOutlined),
+      label: 'Pacientes',
+      children: [
+        { key: '1', label: <Link to="/parentsTable">Seleccion pacientes</Link> },
+        { key: '2', label: <Link to="/parentsList">Lista</Link> },
+      ],
+    },
+    {
+      key: 'sub2',
+      icon: React.createElement(CalendarOutlined),
+      label: 'Datos',
+      children: [
+        { key: '3', label: <Link to="/calendarList">Calendario</Link> },
+        { key: '4', label: <Link to="/devices/settings">Campañas</Link> },
+      ],
+    },
+    {
+      key: 'sub3',
+      icon: React.createElement(NotificationOutlined),
+      label: 'Reportes',
+      children: [
+        { key: '5', label: <Link to="/alerts/settings">Tutores</Link> },
+      ],
+    },
+    {
+      key: 'sub4',
+      icon: React.createElement(SettingOutlined),
+      label: 'Configuración',
+      children: [
+        { key: '6', label: <Link to="/editProfile">Perfil</Link> },
+        { key: '7', label: <Link to="/alerts/settings">Preferencias de notificacion</Link> },
+      ],
+    },
+  ];
 
   return (
     <Layout style={{ height: '100vh' }}>
