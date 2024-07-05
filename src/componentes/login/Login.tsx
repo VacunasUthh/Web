@@ -76,7 +76,7 @@ const TabLogin: React.FC = () => {
                             <Form.Item name="remember" valuePropName="checked" noStyle>
                                 <Checkbox>Recordar</Checkbox>
                             </Form.Item>
-                            <Link href="/" style={{ float: "right" }}>
+                            <Link href="/recovery" style={{ float: "right" }}>
                                 ¿Olvidaste tu contraseña?
                             </Link>
                         </Form.Item>

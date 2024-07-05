@@ -19,6 +19,7 @@
     "@react-pdf/renderer": "^3.4.4",
     "@types/antd": "^1.0.0",
     "antd": "^5.18.3",
+    "axios": "^1.7.2",
     "baseui": "^14.0.0",
     "file-saver": "^2.0.5",
     "moment": "^2.30.1",
