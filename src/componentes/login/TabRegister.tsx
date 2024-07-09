@@ -1,33 +1,129 @@
-import React, { useState } from "react";
-import { Tabs, Form, Input, Button, Radio, DatePicker, Upload, Typography } from "antd";
-import {
-  UserOutlined,
-  IdcardOutlined,
-  CalendarOutlined,
-  UploadOutlined,
-  ManOutlined,
-  WomanOutlined,
-  HomeOutlined,
-  MailOutlined,
-  EnvironmentOutlined,
-  NumberOutlined,
-  PhoneOutlined,
-  LockOutlined,
-} from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Tabs, Form, Input, Button, Radio, DatePicker, Upload, Typography, Select } from "antd";
+import { UserOutlined, IdcardOutlined, CalendarOutlined, UploadOutlined, ManOutlined, WomanOutlined, HomeOutlined, MailOutlined, EnvironmentOutlined, NumberOutlined, PhoneOutlined, LockOutlined } from "@ant-design/icons";
 import BackgroundScreen from './BackgroundScreen';
-import moment from 'moment';
 import { API_URL } from "../../utils/constants";
 import { useNavigate } from 'react-router-dom';
+import imgenfe from '../../image/user.png';
 
 const { Text, Title } = Typography;
 const { TabPane } = Tabs;
+const { Option } = Select;
 
-import imgenfe from '../../image/user.png';
+// Define interfaces for the data
+interface Address {
+  cp: string;
+  state: string;
+  city: string;
+  colony: string;
+  street: string;
+  number: string;
+}
+
+interface FormRegister {
+  curp: string;
+  name: string;
+  lastName: string;
+  motherLastName: string;
+  birthDate: string;
+  gender: string;
+  address: Address;
+  phone: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  typeUser: string;
+  idWorker?: string;
+  profession?: string;
+  cedula?: string;
+  institution?: string;
+  position?: string;
+}
+
+interface Cities {
+  [key: string]: string[];
+}
+
+interface Colonies {
+  [key: string]: string[];
+}
 
 const TabRegister: React.FC = () => {
   const [form] = Form.useForm();
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [formRegister, setFormRegister] = useState<FormRegister>({
+    curp: '',
+    name: '',
+    lastName: '',
+    motherLastName: '',
+    birthDate: '',
+    gender: '',
+    address: {
+      cp: '',
+      state: '',
+      city: '',
+      colony: '',
+      street: '',
+      number: '',
+    },
+    phone: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    typeUser: 'trabajador', // or 'paciente', depending on your requirements
+    idWorker: '', // Optional
+    profession: '', // Optional
+    cedula: '', // Optional
+    institution: '', // Optional
+    position: '', // Optional
+  });
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [states, setStates] = useState<string[]>([]); // Ensure this is a string array
+  const [cities, setCities] = useState<Cities>({});
+  const [colonies, setColonies] = useState<Colonies>({});
+  const [selectedState, setSelectedState] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Load states and cities
+    const loadStatesAndCities = async () => {
+      try {
+        const statesResponse = await fetch('/src/utils/ciudades.json');
+        const statesData: Cities = await statesResponse.json();
+        setStates(Object.keys(statesData)); // This should work if statesData is a Cities object
+        setCities(statesData);
+      } catch (error) {
+        console.error('Error loading states and cities:', error);
+      }
+    };
+
+    // Load colonies
+    const loadColonies = async () => {
+      try {
+        const coloniesResponse = await fetch('/src/utils/colonias.json');
+        const coloniesData: Colonies = await coloniesResponse.json();
+        setColonies(coloniesData);
+      } catch (error) {
+        console.error('Error loading colonies:', error);
+      }
+    };
+
+    loadStatesAndCities();
+    loadColonies();
+  }, []);
+
+  useEffect(() => {
+    if (selectedState) {
+      setSelectedCity(''); // Reset city when state changes
+    }
+  }, [selectedState]);
+
+  useEffect(() => {
+    if (selectedCity) {
+      // Optionally, reset selected colony when city changes
+    }
+  }, [selectedCity]);
 
   const handleImageChange = (info: any) => {
     if (info.file.status === 'done') {
@@ -36,100 +132,78 @@ const TabRegister: React.FC = () => {
   };
 
   const onFinishPersonalData = (values: any) => {
+    console.log("Personal Data:", values); // Verifica los datos recibidos
     setFormRegister((prev) => ({
       ...prev,
-      curp: values.curp,
-      name: values.nombre,
-      lastName: values.apellidoPaterno,
-      motherLastName: values.apellidoMaterno,
-      birthDate: values.fechaNacimiento.format("YYYY-MM-DD"),
-      gender: values.sexo,
+      curp: values.curp || '',
+      name: values.nombre || '',
+      lastName: values.apellidoPaterno || '',
+      motherLastName: values.apellidoMaterno || '',
+      birthDate: values.fechaNacimiento ? values.fechaNacimiento.format("YYYY-MM-DD") : '', // Verifica el formato correcto
+      gender: values.sexo || '',
     }));
     setSelectedIndex(1);
   };
-
+  
   const onFinishAddress = (values: any) => {
+    console.log("Address Data:", values); // Verifica los datos recibidos
     setFormRegister((prev) => ({
       ...prev,
       address: {
-        cp: values.codigoPostal,
-        state: values.estado,
-        city: values.ciudad,
-        colony: values.colonia,
-        street: values.calle,
-        number: values.numero,
+        cp: values.codigoPostal || '',
+        state: values.estado || '',
+        city: values.ciudad || '',
+        colony: values.colonia || '',
+        street: values.calle || '',
+        number: values.numero || '',
       },
     }));
     setSelectedIndex(2);
   };
-  const onFinishContact = async (values: any) => {
-    setFormRegister((prev) => ({
-      ...prev,
-      phone: values.telefono,
-      email: values.correo,
-      password: values.contraseña,
-      confirmPassword: values.confirmarContraseña,
-    }));
   
-    console.log('formRegister:', formRegister);
+  const onFinishContact = async (values: any) => {
+    console.log("Contact Data:", values); // Verifica los datos recibidos
+    const updatedFormRegister: FormRegister = {
+      ...formRegister,
+      phone: values.telefono || '',
+      email: values.correo || '',
+      password: values.contraseña || '',
+      confirmPassword: values.confirmarContraseña || '',
+    };
+  
     try {
+      console.log("Form Register:", updatedFormRegister); // Verifica el estado final antes de enviarlo
       const response = await fetch(`${API_URL}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formRegister),
+        body: JSON.stringify(updatedFormRegister),
       });
   
       const responseData = await response.json();
+      console.log(responseData);
   
       if (response.ok) {
-        console.log('Registro exitoso:', responseData);
-        navigate('/login');
+        console.log('Registration successful:', responseData);
+        navigate('/');
       } else {
-        console.error('Error al registrar:', responseData);
-        // Aquí podrías manejar el error mostrando un mensaje al usuario
+        console.error('Error registering:', responseData);
+        // Handle errors
       }
     } catch (error) {
-      console.error('Error en la solicitud:', error);
+      console.error('Error in request:', error);
     }
   };
   
-  const [formRegister, setFormRegister] = useState({
-      curp: '...',
-      name: '...',
-      lastName: '...',
-      motherLastName: '...',
-      birthDate: 'YYYY-MM-DD',
-      gender: '...',
-      address: {
-        cp: '...',
-        state: '...',
-        city: '...',
-        colony: '...',
-        street: '...',
-        number: '...',
-      },
-      phone: '...',
-      email: '...',
-      password: '...',
-      confirmPassword: '...',
-      typeUser: 'trabajador', // o 'paciente', dependiendo de tus requisitos
-      idWorker: '', // Opcional
-      profession: '', // Opcional
-      cedula: '', // Opcional
-      institution: '', // Opcional
-      position: '', // Opcional
-    });
-
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  
 
   return (
     <BackgroundScreen>
       <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '100vh' }}>
         <div style={{ width: '80%', maxWidth: '550px' }}>
           <img src={imgenfe} alt="User" style={{ width: '50px', height: '50px', display: 'block', margin: '0 auto' }} />
-          <Title level={2} style={{ margin: 10, textAlign: 'center', fontWeight: 'bold' }}>¡Registrate!</Title>
+          <Title level={2} style={{ margin: 10, textAlign: 'center', fontWeight: 'bold' }}>¡Regístrate!</Title>
           <Tabs activeKey={String(selectedIndex)} centered style={{ justifyContent: 'center' }} onChange={(key) => setSelectedIndex(Number(key))}>
             <TabPane tab="Datos Personales" key="0">
               <Form
@@ -153,7 +227,6 @@ const TabRegister: React.FC = () => {
                   name="profileImage"
                   valuePropName="fileList"
                   getValueFromEvent={(e) => e.fileList}
-                  rules={[{ required: true, message: "Por favor sube tu foto de perfil" }]}
                 >
                   <Upload
                     name="profileImage"
@@ -168,61 +241,44 @@ const TabRegister: React.FC = () => {
                 <Text>Curp: </Text>
                 <Form.Item
                   name="curp"
-                  rules={[{ required: true, message: "Por favor ingresa tu CURP" }]}
                 >
-                  <Input prefix={<IdcardOutlined />} placeholder="CURP" />
+                  <Input prefix={<IdcardOutlined />} placeholder="CURP" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Nombre: </Text>
                 <Form.Item
                   name="nombre"
-                  rules={[{ required: true, message: "Por favor ingresa tu nombre" }]}
                 >
-                  <Input prefix={<UserOutlined />} placeholder="Nombre" />
+                  <Input prefix={<UserOutlined />} placeholder="Nombre" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Apellido Paterno: </Text>
                 <Form.Item
                   name="apellidoPaterno"
-                  rules={[{ required: true, message: "Por favor ingresa tu apellido paterno" }]}
                 >
-                  <Input prefix={<UserOutlined />} placeholder="Apellido Paterno" />
+                  <Input prefix={<UserOutlined />} placeholder="Apellido Paterno" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Apellido Materno: </Text>
                 <Form.Item
                   name="apellidoMaterno"
-                  rules={[{ required: true, message: "Por favor ingresa tu apellido materno" }]}
                 >
-                  <Input prefix={<UserOutlined />} placeholder="Apellido Materno" />
+                  <Input prefix={<CalendarOutlined />} placeholder="Apellido Materno" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
-                <Text>Fecha de Nacimiento: </Text>
                 <Form.Item
                   name="fechaNacimiento"
-                  rules={[{ required: true, message: "Por favor ingresa tu fecha de nacimiento" }]}
                 >
-                  <DatePicker
-                    style={{ width: '100%' }}
-                    placeholder="Fecha de nacimiento"
-                    format="DD/MM/YYYY"
-                  />
+                  <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
                 </Form.Item>
-
-                <Text>Sexo: </Text>
-                <Form.Item
-                  name="sexo"
-                  rules={[{ required: true, message: "Por favor selecciona tu sexo" }]}
-                >
+                <Form.Item name="sexo" label="Sexo" rules={[{ required: true }]}>
                   <Radio.Group>
-                    <Radio value="masculino"><ManOutlined /> Masculino</Radio>
-                    <Radio value="femenino"><WomanOutlined /> Femenino</Radio>
+                    <Radio value="Masculino">Masculino</Radio>
+                    <Radio value="Femenino">Femenino</Radio>
                   </Radio.Group>
                 </Form.Item>
-                <Form.Item style={{ marginBottom: "0px" }}>
-                  <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
-                    Siguiente
-                  </Button>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">Siguiente</Button>
                 </Form.Item>
               </Form>
             </TabPane>
-            <TabPane tab="Domicilio" key="1">
+            <TabPane tab="Dirección" key="1">
               <Form
                 form={form}
                 name="address"
@@ -232,56 +288,57 @@ const TabRegister: React.FC = () => {
                 requiredMark="optional"
                 style={{ width: '110%' }}
               >
-                <Title level={4} style={{ marginTop: '1px', textAlign: 'center' }}>Domicilio</Title>
+                <Title level={4} style={{ marginTop: '1px', textAlign: 'center' }}>Dirección</Title>
                 <Text>Código Postal: </Text>
                 <Form.Item
                   name="codigoPostal"
-                  rules={[{ required: true, message: "Por favor ingresa tu código postal" }]}
                 >
-                  <Input prefix={<MailOutlined />} placeholder="Código Postal" />
+                  <Input prefix={<NumberOutlined />} placeholder="Código Postal" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Estado: </Text>
-                <Form.Item
-                  name="estado"
-                  rules={[{ required: true, message: "Por favor ingresa tu estado" }]}
-                >
-                  <Input prefix={<EnvironmentOutlined />} placeholder="Estado" />
+                <Form.Item name="estado" rules={[{ required: true }]}>
+                  <Select
+                    placeholder="Selecciona un estado"
+                    onChange={(value) => setSelectedState(value)}
+                  >
+                    {states.map(state => (
+                      <Option key={state} value={state}>{state}</Option>
+                    ))}
+                  </Select>
                 </Form.Item>
                 <Text>Ciudad: </Text>
-                <Form.Item
-                  name="ciudad"
-                  rules={[{ required: true, message: "Por favor ingresa tu ciudad" }]}
-                >
-                  <Input prefix={<NumberOutlined />} placeholder="Ciudad" />
+                <Form.Item name="ciudad" rules={[{ required: true }]}>
+                  <Select
+                    placeholder="Selecciona una ciudad"
+                    onChange={(value) => setSelectedCity(value)}
+                  >
+                    {selectedState && cities[selectedState]?.map(city => (
+                      <Option key={city} value={city}>{city}</Option>
+                    ))}
+                  </Select>
                 </Form.Item>
                 <Text>Colonia: </Text>
-                <Form.Item
-                  name="colonia"
-                  rules={[{ required: true, message: "Por favor ingresa tu colonia" }]}
-                >
-                  <Input prefix={<HomeOutlined />} placeholder="Colonia" />
+                <Form.Item name="colonia" rules={[{ required: true }]}>
+                  <Select placeholder="Selecciona una colonia">
+                    {selectedCity && colonies[selectedCity]?.map(colony => (
+                      <Option key={colony} value={colony}>{colony}</Option>
+                    ))}
+                  </Select>
                 </Form.Item>
                 <Text>Calle: </Text>
                 <Form.Item
                   name="calle"
-                  rules={[{ required: true, message: "Por favor ingresa tu calle" }]}
                 >
-                  <Input prefix={<HomeOutlined />} placeholder="Calle" />
+                  <Input prefix={<HomeOutlined />} placeholder="Calle" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Número: </Text>
                 <Form.Item
                   name="numero"
-                  rules={[{ required: true, message: "Por favor ingresa tu número" }]}
                 >
-                  <Input prefix={<NumberOutlined />} placeholder="Número" />
+                  <Input prefix={<NumberOutlined />} placeholder="Número" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
-                <Form.Item style={{ marginBottom: "0px", display: 'flex', justifyContent: 'space-between' }}>
-                  <Button type="default" htmlType="button" style={{ width: '50%' }} onClick={() => setSelectedIndex(0)}>
-                    Atrás
-                  </Button>
-                  <Button type="primary" htmlType="submit" style={{ width: '50%' }}>
-                    Siguiente
-                  </Button>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">Siguiente</Button>
                 </Form.Item>
               </Form>
             </TabPane>
@@ -295,42 +352,35 @@ const TabRegister: React.FC = () => {
                 requiredMark="optional"
                 style={{ width: '110%' }}
               >
-                <Title level={4} style={{ marginTop: '1px', textAlign: 'center' }}>Seguridad</Title>
+                <Title level={4} style={{ marginTop: '1px', textAlign: 'center' }}>Contacto</Title>
                 <Text>Teléfono: </Text>
                 <Form.Item
                   name="telefono"
-                  rules={[{ required: true, message: "Por favor ingresa tu teléfono" }]}
                 >
-                  <Input prefix={<PhoneOutlined />} placeholder="Teléfono" />
+                  <Input prefix={<PhoneOutlined />} placeholder="Teléfono" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
-                <Text>Correo: </Text>
+                <Text>Correo Electrónico: </Text>
                 <Form.Item
                   name="correo"
-                  rules={[{ required: true, message: "Por favor ingresa tu correo" }]}
                 >
-                  <Input prefix={<MailOutlined />} placeholder="Correo" />
+                  <Input prefix={<MailOutlined />} placeholder="Correo Electrónico" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Contraseña: </Text>
                 <Form.Item
                   name="contraseña"
-                  rules={[{ required: true, message: "Por favor ingresa tu contraseña" }]}
+                  rules={[{ required: true, message: 'Por favor ingresa tu contraseña!' }]}
                 >
-                  <Input.Password prefix={<LockOutlined />} placeholder="Contraseña" />
+                  <Input.Password prefix={<LockOutlined />} placeholder="Contraseña" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
                 <Text>Confirmar Contraseña: </Text>
                 <Form.Item
                   name="confirmarContraseña"
-                  rules={[{ required: true, message: "Por favor confirma tu contraseña" }]}
+                  rules={[{ required: true, message: 'Por favor confirma tu contraseña!' }]}
                 >
-                  <Input.Password prefix={<LockOutlined />} placeholder="Confirmar Contraseña" />
+                  <Input.Password prefix={<LockOutlined />} placeholder="Confirmar Contraseña" style={{ width: "100%", padding: "12px" }} />
                 </Form.Item>
-                <Form.Item style={{ marginBottom: "0px", display: 'flex', justifyContent: 'space-between' }}>
-                  <Button type="default" htmlType="button" style={{ width: '48%' }} onClick={() => setSelectedIndex(1)}>
-                    Atrás
-                  </Button>
-                  <Button type="primary" htmlType="submit" style={{ width: '48%' }}>
-                    Registrar
-                  </Button>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">Registrarse</Button>
                 </Form.Item>
               </Form>
             </TabPane>

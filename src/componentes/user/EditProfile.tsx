@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Tabs, Form, Input, Button, Radio, DatePicker, Upload, Typography } from "antd";
+import { Tabs, Form, Input, Button, Radio, DatePicker, Typography, message } from "antd";
 import {
     UserOutlined,
     IdcardOutlined,
-    CalendarOutlined,
-    UploadOutlined,
     ManOutlined,
     WomanOutlined,
-    HomeOutlined,
     MailOutlined,
     EnvironmentOutlined,
     NumberOutlined,
-    PhoneOutlined,
+    HomeOutlined,
 } from "@ant-design/icons";
 import moment from 'moment';
 import { API_URL } from "../../utils/constants";
-import { useAuth } from './../AuthContext'; // Assuming useAuth is a custom hook to get the authenticated user
+import { useAuth } from './../AuthContext';
 import imgenfe from '../../image/user.png';
 
 const { Text, Title } = Typography;
@@ -26,31 +23,16 @@ const EditProfile: React.FC = () => {
     const { user } = useAuth();
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [profileImage, setProfileImage] = useState(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const response = await fetch(`${API_URL}/users/${user?._id}`);
-                console.log(response)
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                
-                const contentType = response.headers.get('content-type');
-                if (!contentType?.includes('application/json')) {
-                    throw new Error('Invalid content-type. Expected application/json.');
-                }
-                
-                const data = await response.json(); 
-                if (!data || typeof data !== 'object') {
-                    throw new Error('Invalid data format');
-                }
-                
-                console.log('Fetched user data:', data);
-                
+                const data = await response.json();
                 setUserData(data);
-                
                 form.setFieldsValue({
                     curp: data.curp,
                     nombre: data.name,
@@ -71,66 +53,99 @@ const EditProfile: React.FC = () => {
                 setLoading(false);
             }
         };
-        
 
         if (user?._id) {
             fetchUserData();
         }
     }, [user, form]);
 
-    const handleImageChange = (info: any) => {
-        if (info.file.status === 'done') {
-            setProfileImage(info.file.originFileObj);
-        }
+    interface ClientData {
+        curp?: string;
+        nombre?: string; // Correspondiente a 'name' en el servidor
+        apellidoPaterno?: string; // Correspondiente a 'lastName' en el servidor
+        apellidoMaterno?: string; // Correspondiente a 'motherLastName' en el servidor
+        fechaNacimiento?: string; // Correspondiente a 'birthDate' en el servidor
+        sexo?: string; // Correspondiente a 'gender' en el servidor
+        // Agrega otros campos según sea necesario
+    }
+    const mapToServerFields = (clientData: ClientData) => {
+        return {
+            curp: clientData.curp,
+            name: clientData.nombre, // Mapeado desde español a inglés
+            lastName: clientData.apellidoPaterno,
+            motherLastName: clientData.apellidoMaterno,
+            birthDate: clientData.fechaNacimiento,
+            gender: clientData.sexo
+            // Agrega otros campos según sea necesario
+        };
     };
 
-    const onFinish = (values: any) => {
-        console.log('Received values of form: ', values);
-        // Logic to send the updated data to the server
+
+    const onFinish = async (values: ClientData) => {
+        try {
+            const updates = mapToServerFields(values);
+    
+            const response = await fetch(`${API_URL}/users/actualizar/${user?._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
+            const updatedUser = await response.json();
+            message.success('Información actualizada correctamente');
+    
+            setUserData(updatedUser);
+            form.setFieldsValue({
+                curp: updatedUser.curp,
+                nombre: updatedUser.name,
+                apellidoPaterno: updatedUser.lastName,
+                apellidoMaterno: updatedUser.motherLastName,
+                sexo: updatedUser.gender,
+                codigoPostal: updatedUser.address?.cp,
+                estado: updatedUser.address?.state,
+                ciudad: updatedUser.address?.city,
+                colonia: updatedUser.address?.colony,
+                calle: updatedUser.address?.street,
+                numero: updatedUser.address?.number,
+            });
+        } catch (error) {
+            console.error('Error updating user data:', error);
+            message.error('Error actualizando la información');
+        }
     };
+    
+
+
+
+
 
     if (loading) {
         return <div>Cargando...</div>;
     }
 
     return (
-        <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '100vh' }}>
+        <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '100vh' }}>
             <div style={{ width: '80%', maxWidth: '550px' }}>
-                <img src={profileImage || imgenfe} alt="User" style={{ width: '50px', height: '50px', display: 'block', margin: '0 auto' }} />
+                <img src={imgenfe} alt="User" style={{ width: '50px', height: '50px', display: 'block', margin: '0 auto' }} />
                 <Title level={2} style={{ margin: 10, textAlign: 'center', fontWeight: 'bold' }}>Editar Perfil</Title>
-                <Tabs defaultActiveKey="1" centered style={{ justifyContent: 'center' }}>
-                    <TabPane tab="Datos Personales" key="1">
-                        <Form
-                            form={form}
-                            name="edit_personal_data"
-                            initialValues={{ remember: true }}
-                            onFinish={onFinish}
-                            layout="vertical"
-                            requiredMark="optional"
-                            style={{ width: '110%' }}
-                        >
+                <Form
+                    form={form}
+                    name="edit_profile"
+                    initialValues={{ remember: true }}
+                    onFinish={onFinish}
+                    layout="vertical"
+                    requiredMark="optional"
+                    style={{ width: '100%' }}
+                >
+                    <Tabs defaultActiveKey="1" centered style={{ justifyContent: 'center' }}>
+                        <TabPane tab="Datos Personales" key="1">
                             <Title level={4} style={{ marginTop: '1px', textAlign: 'center' }}>Datos Personales</Title>
-
-                            {profileImage && (
-                                <img src={URL.createObjectURL(profileImage)} alt="profile" style={{ width: '100%', marginBottom: '10px' }} />
-                            )}
-
-                            <Text>Foto de perfil: </Text>
-                            <Form.Item
-                                name="profileImage"
-                                valuePropName="fileList"
-                                getValueFromEvent={(e) => e.fileList}
-                            >
-                                <Upload
-                                    name="profileImage"
-                                    listType="picture"
-                                    maxCount={1}
-                                    onChange={handleImageChange}
-                                    beforeUpload={() => false}
-                                >
-                                    <Button icon={<UploadOutlined />}>Subir Foto</Button>
-                                </Upload>
-                            </Form.Item>
                             <Text>Curp: </Text>
                             <Form.Item name="curp">
                                 <Input prefix={<IdcardOutlined />} placeholder="CURP" />
@@ -158,18 +173,8 @@ const EditProfile: React.FC = () => {
                                     <Radio value="Femenino"><WomanOutlined /> Femenino</Radio>
                                 </Radio.Group>
                             </Form.Item>
-                        </Form>
-                    </TabPane>
-                    <TabPane tab="Domicilio" key="2">
-                        <Form
-                            form={form}
-                            name="edit_address"
-                            initialValues={{ remember: true }}
-                            onFinish={onFinish}
-                            layout="vertical"
-                            requiredMark="optional"
-                            style={{ width: '110%' }}
-                        >
+                        </TabPane>
+                        <TabPane tab="Domicilio" key="2">
                             <Title level={4} style={{ marginTop: '1px', textAlign: 'center' }}>Domicilio</Title>
                             <Text>Código Postal: </Text>
                             <Form.Item name="codigoPostal">
@@ -195,17 +200,14 @@ const EditProfile: React.FC = () => {
                             <Form.Item name="numero">
                                 <Input prefix={<NumberOutlined />} placeholder="Número" />
                             </Form.Item>
-                            <Form.Item style={{ marginBottom: "0px", display: 'flex', justifyContent: 'space-between' }}>
-                                <Button type="default" htmlType="button" style={{ width: '48%' }} onClick={() => form.resetFields()}>
-                                    Cancelar
-                                </Button>
-                                <Button type="primary" htmlType="submit" style={{ width: '48%' }}>
-                                    Guardar
-                                </Button>
-                            </Form.Item>
-                        </Form>
-                    </TabPane>
-                </Tabs>
+                        </TabPane>
+                    </Tabs>
+                    <Form.Item style={{ marginTop: '20px', textAlign: 'center' }}>
+                        <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
+                            Guardar
+                        </Button>
+                    </Form.Item>
+                </Form>
             </div>
         </div>
     );

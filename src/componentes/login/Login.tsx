@@ -61,7 +61,7 @@ const TabLogin: React.FC = () => {
                         <Text>Usuario: </Text>
                         <Form.Item
                             name="username"
-                            rules={[{ required: true, message: "Por favor ingresa tu usuario" }]}
+                            rules={[{ required: true, message: "Por favor ingresa tu correo" }]}
                         >
                             <Input prefix={<UserOutlined />} placeholder="Usuario" />
                         </Form.Item>

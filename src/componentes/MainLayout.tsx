@@ -83,20 +83,20 @@ const MainLayout: React.FC = () => {
             items={items2}
           />
         </Sider>
-        <Layout style={{ padding: '0 24px 24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Layout style={{ padding: '0 24px 24px', height: '100%' }}>
           <Content
             style={{
               padding: 24,
               margin: 0,
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
-              flex: '1 0 auto', // Flex item will grow and shrink as needed but with priority to initial size
+              height: '100%',
               overflowY: 'auto', // Ensures content can be scrolled if it overflows
             }}
           >
             <Outlet />
           </Content>
-          <Footer style={{ textAlign: 'center', flexShrink: 0 }}>
+          <Footer style={{ textAlign: 'center' }}>
             <Link to="/faq">Preguntas frecuentes</Link>
           </Footer>
         </Layout>
