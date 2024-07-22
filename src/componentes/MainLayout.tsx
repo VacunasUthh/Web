@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Layout, Menu, theme } from 'antd';
-import { UserOutlined, LaptopOutlined, NotificationOutlined, CalendarOutlined, SettingOutlined } from '@ant-design/icons';
+import { UserOutlined, NotificationOutlined, CalendarOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { useAuth } from './AuthContext'; // Ajusta la ruta según corresponda
 
@@ -38,8 +38,9 @@ const MainLayout: React.FC = () => {
       icon: React.createElement(CalendarOutlined),
       label: 'Datos',
       children: [
-        { key: '3', label: <Link to="/calendarList">Calendario</Link> },
-        { key: '4', label: <Link to="/devices/settings">Campañas</Link> },
+        { key: '3', label: <Link to="/vaccines">Vacunas</Link> },
+        { key: '4', label: <Link to="/calendarList">Calendario</Link> },
+        { key: '5', label: <Link to="/campaings">Campañas</Link> },
       ],
     },
     {
@@ -47,7 +48,7 @@ const MainLayout: React.FC = () => {
       icon: React.createElement(NotificationOutlined),
       label: 'Reportes',
       children: [
-        { key: '5', label: <Link to="/alerts/settings">Tutores</Link> },
+        { key: '6', label: <Link to="/alerts/settings">Tutores</Link> },
       ],
     },
     {
@@ -55,8 +56,8 @@ const MainLayout: React.FC = () => {
       icon: React.createElement(SettingOutlined),
       label: 'Configuración',
       children: [
-        { key: '6', label: <Link to="/editProfile">Perfil</Link> },
-        { key: '7', label: <Link to="/alerts/settings">Preferencias de notificacion</Link> },
+        { key: '7', label: <Link to="/editProfile">Perfil</Link> },
+        { key: '8', label: <Link to="/alerts/settings">Preferencias de notificacion</Link> },
       ],
     },
   ];

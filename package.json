@@ -21,6 +21,7 @@
     "antd": "^5.18.3",
     "axios": "^1.7.2",
     "baseui": "^14.0.0",
+    "cloudinary-react": "^1.8.1",
     "file-saver": "^2.0.5",
     "moment": "^2.30.1",
     "react": "^18.2.0",

@@ -1,0 +1,31 @@
+.custom-table .ant-table-title {
+  background-color: green;
+  color: rgb(0, 0, 0);
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.custom-table .ant-table-thead > tr > th {
+  background-color: green;
+  color: white;
+  text-align: center;
+}
+
+.custom-table .ant-table-tbody > tr > td {
+  text-align: center;
+}
+
+.custom-table .date-próxima {
+  background-color: white;
+}
+
+.custom-table .date-atrasada {
+  background-color: red;
+  color: white;
+}
+
+.custom-table .date-aplicada {
+  background-color: green;
+  color: white;
+}

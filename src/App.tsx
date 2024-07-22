@@ -13,6 +13,11 @@ import EditProfile from './componentes/user/EditProfile';
 import Recovery from './componentes/recovery/recoveryPass';
 import Code from './componentes/recovery/entercode';
 import ChangePas from './componentes/recovery/changePass';
+import CampaignList from './componentes/campains/CampaignList';
+import CreateCampaign from './componentes/campains/CreateCampaign';
+import VaccinationSchedule from './componentes/pacients/cartilla';
+import VaccineList from './componentes/vaccines/VaccineList';
+import CreateVaccine from './componentes/vaccines/CreateVaccine';
 
 const App: React.FC = () => {
   return (
@@ -27,9 +32,13 @@ const App: React.FC = () => {
           <Route path="/*" element={<PrivateRoute element={<MainLayout />} path="/*" />}>
             <Route path="main" element={<div>Inicio</div>} />
             <Route path="parentsTable" element={<ParentsTable />} />
+            <Route path="cartilla/:childId" element={<VaccinationSchedule />} />
             <Route path="parentsList" element={<ParentsList />} />
             <Route path="calendarList" element={<CalendarList />} />
             <Route path="editProfile" element={<EditProfile />} />
+            <Route path="campaings" element={<CampaignList />} />
+            <Route path="vaccines" element={<VaccineList />} />
+            <Route path="makeVaccines" element={<CreateVaccine />} />
             <Route path="faq" element={<FAQ />} />
             <Route path="" element={<Navigate to="main" replace />} />
           </Route>

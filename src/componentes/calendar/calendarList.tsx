@@ -4,7 +4,7 @@ import { API_URL } from "../../utils/constants";
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import locale from 'antd/es/calendar/locale/es_ES';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 
 const { TextArea } = Input;
 
@@ -28,16 +28,19 @@ interface Vaccination {
     vaccineName: string;
     expectedVaccineDate: Date;
     delayDays?: number;
+    applicationDate: Date;
 }
 
 interface VaccinationData {
     notifications: Vaccination[];
     upcomingVaccinations: Vaccination[];
+    appliedVaccinations: Vaccination[];
 }
 
 interface ReportData {
     notifications: Vaccination[];
     upcomingVaccinations: Vaccination[];
+    appliedVaccinations: Vaccination[];
     parentName: string;
     childName: string;
     childBirthDate: string;
@@ -103,7 +106,7 @@ const CalendarList: React.FC = () => {
     const [data, setData] = useState<Child[]>([]);
     const [selectedChild, setSelectedChild] = useState<string | null>(null);
     const [selectedChildHistory, setSelectedChildHistory] = useState<Child | null>(null);
-    const [vaccinationDates, setVaccinationDates] = useState<VaccinationData>({ notifications: [], upcomingVaccinations: [] });
+    const [vaccinationDates, setVaccinationDates] = useState<VaccinationData>({ notifications: [], upcomingVaccinations: [] , appliedVaccinations: []});
     const [loading, setLoading] = useState<boolean>(false);
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
     const [vaccinationData, setVaccinationData] = useState<VaccinationData | null>(null);
@@ -138,11 +141,12 @@ const CalendarList: React.FC = () => {
         setSelectedChild(childId);
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/parents/child/${childId}`);
+            const response = await fetch(`${API_URL}/parents/cartilla/${childId}`);
             if (!response.ok) {
                 throw new Error('Error fetching vaccination data');
             }
             const vaccinationData = await response.json();
+            console.log(vaccinationData)
             setVaccinationDates(vaccinationData);
         } catch (error) {
             console.error('Error fetching vaccination data:', error);
@@ -153,7 +157,7 @@ const CalendarList: React.FC = () => {
 
     const handleViewReport = async (childId: string, childName: string, childBirthDate: string) => {
         try {
-            const response = await fetch(`${API_URL}/parents/child/${childId}`);
+            const response = await fetch(`${API_URL}/parents/cartilla/${childId}`);
             if (!response.ok) {
                 throw new Error('Error fetching vaccination data');
             }
@@ -161,6 +165,7 @@ const CalendarList: React.FC = () => {
             const reportData: ReportData = {
                 notifications: data.notifications,
                 upcomingVaccinations: data.upcomingVaccinations,
+                appliedVaccinations: data.appliedVaccinations,
                 parentName: data.parentName,
                 childName: childName,
                 childBirthDate: data.childBirthDate,
@@ -204,6 +209,20 @@ const CalendarList: React.FC = () => {
                                 </View>
                             ))}
                         </View>
+
+                        <Text style={styles.subtitle1}>Vacunas Aplicadas:</Text>
+                        <View style={styles.table}>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.tableCellHeader}>Nombre de la Vacuna</Text>
+                                <Text style={styles.tableCellHeader}>Fecha De Aplicacion</Text>
+                            </View>
+                            {reportData.appliedVaccinations.map(vaccination => (
+                                <View style={styles.tableRow} key={vaccination.vaccineId}>
+                                    <Text style={styles.tableCell}>{vaccination.vaccineName}</Text>
+                                    <Text style={styles.tableCell}>{new Date(vaccination.applicationDate).toLocaleDateString()}</Text>
+                                </View>
+                            ))}
+                        </View>
                     </Page>
                 </Document>
             );
@@ -225,7 +244,7 @@ const CalendarList: React.FC = () => {
 
     const fetchVaccinationData = async (childId: string) => {
         try {
-            const response = await fetch(`${API_URL}/parents/child/${childId}`);
+            const response = await fetch(`${API_URL}/parents/cartilla/${childId}`);
             if (!response.ok) {
                 throw new Error('Error fetching vaccination data');
             }
@@ -238,15 +257,15 @@ const CalendarList: React.FC = () => {
 
     const showModal = (child: Child) => {
         setSelectedChildHistory(child);
-        setVaccinationData(null); // Limpiar los datos de vacunación antes de cargar nuevos datos
+        setVaccinationData(null); 
         fetchVaccinationData(child.childId);
-        setHistoryModalVisible(true); // Mostrar el modal de historial
+        setHistoryModalVisible(true); 
     };
 
     const handleCancel = () => {
-        setHistoryModalVisible(false); // Ocultar el modal de historial
-        setSelectedChildHistory(null); // Limpiar el niño seleccionado para historial
-        setVaccinationData(null); // Limpiar los datos de vacunación
+        setHistoryModalVisible(false); 
+        setSelectedChildHistory(null); 
+        setVaccinationData(null); 
     };
 
     const handleSendNotification = () => {
@@ -294,7 +313,7 @@ const CalendarList: React.FC = () => {
             message.error('Error al enviar la notificación');
         }
 
-        setObservationModalVisible(false); // Cerrar el modal de observación
+        setObservationModalVisible(false); 
     };
 
     const handleObservationOk = () => {
@@ -335,6 +354,20 @@ const CalendarList: React.FC = () => {
             title: 'Fecha Esperada',
             dataIndex: 'expectedVaccineDate',
             key: 'expectedVaccineDate',
+            render: (date: Date) => new Date(date).toLocaleDateString(),
+        },
+    ];
+
+    const appliedVaccinations = [
+        {
+            title: 'Nombre de la Vacuna',
+            dataIndex: 'vaccineName',
+            key: 'vaccineName',
+        },
+        {
+            title: 'Fecha Aplicada',
+            dataIndex: 'applicationDate',
+            key: 'applicationDate',
             render: (date: Date) => new Date(date).toLocaleDateString(),
         },
     ];
@@ -401,6 +434,13 @@ const CalendarList: React.FC = () => {
                         rowKey={(record: Vaccination) => record.vaccineId}
                         pagination={false}
                     />
+                    <h3>Vacunas Aplicadas:</h3>
+                    <Table
+                        columns={appliedVaccinations}
+                        dataSource={vaccinationData?.appliedVaccinations}
+                        rowKey={(record: Vaccination) => record.vaccineId}
+                        pagination={false}
+                    />
                 </Modal>
             )}
             {selectedChild && (
@@ -415,7 +455,7 @@ const CalendarList: React.FC = () => {
                                 const formattedValue = value.format('YYYY-MM-DD');
                                 const notifications = vaccinationDates.notifications.filter((notification: any) => dayjs(notification.expectedVaccineDate).format('YYYY-MM-DD') === formattedValue);
                                 const upcomingVaccinations = vaccinationDates.upcomingVaccinations.filter((vaccination: any) => dayjs(vaccination.expectedVaccineDate).format('YYYY-MM-DD') === formattedValue);
-
+                                const appliedVaccinations = vaccinationDates.appliedVaccinations.filter((vaccination: any) => dayjs(vaccination.applicationDate).format('YYYY-MM-DD') === formattedValue);
                                 return (
                                     <ul className="events">
                                         {notifications.length > 0 && (
@@ -431,8 +471,19 @@ const CalendarList: React.FC = () => {
                                         )}
                                         {upcomingVaccinations.length > 0 && (
                                             <li>
-                                                <Badge status="success" text={`Próximo:`} />
+                                                <Badge status= "warning" text={`Próximo:`} />
                                                 {upcomingVaccinations.map((vaccination: any) => (
+                                                    <span key={vaccination.vaccineId}>
+                                                        {vaccination.vaccineName}
+                                                        <br />
+                                                    </span>
+                                                ))}
+                                            </li>
+                                        )}
+                                        {appliedVaccinations.length > 0 && (
+                                            <li>
+                                                <Badge status="success" text={`Aplicado:`} />
+                                                {appliedVaccinations.map((vaccination: any) => (
                                                     <span key={vaccination.vaccineId}>
                                                         {vaccination.vaccineName}
                                                         <br />

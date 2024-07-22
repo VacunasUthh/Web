@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Space, Button, Modal } from 'antd';
+import { Table, Space, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useNavigate } from 'react-router-dom';
 import { API_URL } from "../../utils/constants";
 
+// Define los tipos
 interface Child {
     childId: string;
     childName: string;
@@ -20,10 +22,15 @@ interface Parent {
     children: Child[];
 }
 
+// Define el tipo combinado
+interface CombinedChild extends Child {
+    parentName: string;
+    parentId: string;
+}
+
 const ParentsList: React.FC = () => {
-    const [data, setData] = useState<Parent[]>([]);
-    const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
-    const [modalVisible, setModalVisible] = useState(false);
+    const [data, setData] = useState<CombinedChild[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchParents();
@@ -35,88 +42,56 @@ const ParentsList: React.FC = () => {
             if (!response.ok) {
                 throw new Error('Error fetching assigned parents');
             }
-            console.log(localStorage.getItem('email'))
-            const parents = await response.json();
-            setData(parents);
+            const parents: Parent[] = await response.json();
+            const transformedData: CombinedChild[] = parents.flatMap(parent => 
+                parent.children.map(child => ({
+                    ...child,
+                    parentName: parent.parentName,
+                    parentId: parent.parentId,
+                }))
+            );
+            setData(transformedData);
         } catch (error) {
             console.error('Error fetching parents:', error);
         }
     };
 
-    const fetchParentDetails = async (parentId: string) => {
-        try {
-            const response = await fetch(`${API_URL}/parents/details/${parentId}`);
-            if (!response.ok) {
-                throw new Error('Error fetching parent details');
-            }
-            const parentDetails = await response.json();
-            setSelectedParent(parentDetails);
-            setModalVisible(true);
-        } catch (error) {
-            console.error('Error fetching parent details:', error);
-        }
+    const handleCartillaClick = (childId: string) => {
+        navigate(`/cartilla/${childId}`);
     };
 
-    const columns: ColumnsType<Parent> = [
+    // Define las columnas con el tipo combinado
+    const columns: ColumnsType<CombinedChild> = [
         {
             title: 'Nombre del Padre',
             dataIndex: 'parentName',
             key: 'parentName',
         },
         {
-            title: 'Nombre(s) del Hijo(s)',
-            dataIndex: 'children',
-            key: 'children',
-            render: (children: Child[]) => children.map(child => child.childName).join(', '),
+            title: 'Nombre del Hijo',
+            dataIndex: 'childName',
+            key: 'childName',
         },
         {
             title: 'Acciones',
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <a onClick={() => fetchParentDetails(record.parentId)}>Detalles</a>
+                    <Button onClick={() => handleCartillaClick(record.childId)}>
+                        Cartilla
+                    </Button>
                 </Space>
             ),
         },
     ];
 
     return (
-        <>
-            <Table
-                columns={columns}
-                dataSource={data}
-                pagination={{ pageSize: 7 }}
-                rowKey={(record) => record.parentId}
-                expandable={{
-                    expandedRowRender: () => null,
-                    rowExpandable: () => false,
-                }}
-            />
-            {selectedParent && (
-                <Modal
-                    title={`Hijo(s) de ${selectedParent.parentName}`}
-                    visible={modalVisible}
-                    onCancel={() => setModalVisible(false)}
-                    footer={[
-                        <Button key="close" onClick={() => setModalVisible(false)}>
-                            Cerrar
-                        </Button>,
-                    ]}
-                >
-                    {selectedParent.children.map(child => (
-                        <div key={child.childId} style={{ marginBottom: '20px' }}>
-                            <h3>hijo(a): {child.childName}</h3>
-                            <p><strong>Género:</strong> {child.gender}</p>
-                            <p><strong>Fecha de nacimiento:</strong> {child.date}</p>
-                            <p><strong>Altura:</strong> {child.height}</p>
-                            <p><strong>Peso:</strong> {child.weight}</p>
-                            <p><strong>Vacunas:</strong> {child.vaccines}</p>
-                            <p><strong>Hospital:</strong> {child.hospital}</p>
-                        </div>
-                    ))}
-                </Modal>
-            )}
-        </>
+        <Table
+            columns={columns}
+            dataSource={data}
+            pagination={{ pageSize: 7 }}
+            rowKey={(record) => record.childId}
+        />
     );
 };
 
