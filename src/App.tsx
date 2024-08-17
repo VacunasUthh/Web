@@ -38,6 +38,7 @@ const App: React.FC = () => {
             <Route path="editProfile" element={<EditProfile />} />
             <Route path="campaings" element={<CampaignList />} />
             <Route path="vaccines" element={<VaccineList />} />
+            <Route path="makeCampaings" element={<CreateCampaign />} />
             <Route path="makeVaccines" element={<CreateVaccine />} />
             <Route path="faq" element={<FAQ />} />
             <Route path="" element={<Navigate to="main" replace />} />

@@ -8,6 +8,7 @@ interface Vaccination {
   vaccineId: string;
   vaccineName: string;
   expectedVaccineDate: string;
+  confirmationDate: string;
   applicationDate: string;
   delayDays?: number;
   type?: string;
@@ -22,10 +23,11 @@ interface VaccinationTableData {
   key: string;
   vaccineName: string;
   expectedVaccineDate: Date;
-  applicationDate: Date;
+  confirmationDate?: Date;
+  applicationDate: Date | null;
   dateToShow: Date;
   type?: string;
-  dose?: number;
+  dose?: string;
   disease?: string;
   contraindications?: string;
   rowSpan?: number;
@@ -44,6 +46,7 @@ const VaccinationSchedule: React.FC = () => {
       }
       const data = await response.json();
       setChildData(data);
+      console.log(data)
     } catch (error) {
       console.error('Error al obtener los detalles del niño:', error);
     }
@@ -76,50 +79,76 @@ const VaccinationSchedule: React.FC = () => {
     }
   };
 
-  const calculateDoses = (vaccinations: Vaccination[]) => {
-    const groupedVaccines = vaccinations.reduce((acc: { [key: string]: Vaccination[] }, vaccine) => {
-      if (!acc[vaccine.vaccineName]) {
-        acc[vaccine.vaccineName] = [];
+  const combineAndSortVaccinations = (
+    notifications: Vaccination[], 
+    upcomingVaccinations: Vaccination[], 
+    appliedVaccinations: Vaccination[], 
+    confirmedVaccinations: Vaccination[]
+  ) => {
+    // Crear un mapa de vacunas confirmadas por key y fecha
+    const confirmedMap = new Map<string, Vaccination>();
+    confirmedVaccinations.forEach(vaccine => {
+      const key = `${vaccine.vaccineId}-${vaccine.confirmationDate}`;
+      if (!confirmedMap.has(key)) {
+        confirmedMap.set(key, vaccine);
       }
-      acc[vaccine.vaccineName].push(vaccine);
-      return acc;
-    }, {});
-    return Object.entries(groupedVaccines).flatMap(([vaccineName, vaccines]) => {
-      const sortedVaccines = vaccines
-        .sort((a, b) => new Date(a.expectedVaccineDate).getTime() - new Date(b.expectedVaccineDate).getTime());
-      return sortedVaccines.map((vaccine, index) => ({
-        ...vaccine,
-        dose: index + 1,
-      }));
     });
-  };
-
-  const combineAndSortVaccinations = (notifications: Vaccination[], upcomingVaccinations: Vaccination[], appliedVaccinations: Vaccination[]) => {
+  
+    // Filtrar las vacunas confirmadas que también están en aplicadas
+    const appliedSet = new Set(
+      appliedVaccinations.map(vaccine => `${vaccine.vaccineId}-${vaccine.applicationDate}`)
+    );
+  
+    // Filtrar las vacunas próximas y atrasadas eliminando las que coinciden con las confirmadas y aplicadas
+    const filteredNotifications = notifications.filter(
+      vaccine => !confirmedMap.has(`${vaccine.vaccineId}-${vaccine.expectedVaccineDate}`)
+    );
+    const filteredUpcomingVaccinations = upcomingVaccinations.filter(
+      vaccine => !confirmedMap.has(`${vaccine.vaccineId}-${vaccine.expectedVaccineDate}`)
+    );
+    const filteredAppliedVaccinations = appliedVaccinations.filter(
+      vaccine => !confirmedMap.has(`${vaccine.vaccineId}-${vaccine.expectedVaccineDate}`)
+    );
+  
+    // Filtrar las confirmadas eliminando las que ya han sido aplicadas
+    const filteredConfirmedVaccinations = Array.from(confirmedMap.values()).filter(
+      vaccine => !appliedSet.has(`${vaccine.vaccineId}-${vaccine.confirmationDate}`)
+    );
+  
+    // Combinar todas las vacunas
     const combined = [
-      ...appliedVaccinations.map(vaccine => ({
+      ...filteredAppliedVaccinations.map(vaccine => ({
         ...vaccine,
         type: 'Aplicada'
       })),
-      ...notifications.map(notification => ({
+      ...filteredNotifications.map(notification => ({
         ...notification,
         type: 'Atrasada'
       })),
-      ...upcomingVaccinations.map(vaccine => ({
+      ...filteredUpcomingVaccinations.map(vaccine => ({
         ...vaccine,
         type: 'Próxima'
+      })),
+      ...filteredConfirmedVaccinations.map(vaccine => ({
+        ...vaccine,
+        type: 'Confirmada'
       }))
     ];
-
-    const calculatedDoses = calculateDoses(combined);
-    const sortedVaccinations = calculatedDoses
+  
+    // Ordenar las vacunas combinadas
+    const sortedVaccinations = combined
       .map(vaccine => ({
         key: vaccine.vaccineId,
         vaccineName: vaccine.vaccineName,
         expectedVaccineDate: new Date(vaccine.expectedVaccineDate),
-        applicationDate: new Date(vaccine.applicationDate),
-        dateToShow: vaccine.applicationDate ? new Date(vaccine.applicationDate) : new Date(vaccine.expectedVaccineDate),
+        applicationDate: vaccine.applicationDate ? new Date(vaccine.applicationDate) : null,
+        dateToShow: vaccine.confirmationDate 
+          ? new Date(vaccine.confirmationDate) 
+          : (vaccine.applicationDate 
+            ? new Date(vaccine.applicationDate) 
+            : new Date(vaccine.expectedVaccineDate)),
         type: vaccine.type,
-        dose: vaccine.dose,
+        dose: `Mes ${vaccine.month}`,  // Mostrar mes aquí
         disease: vaccine.disease ? vaccine.disease.join(', ') : 'N/A',
         contraindications: vaccine.contraindications?.join(', '),
         rowSpan: vaccine.rowSpan,
@@ -127,11 +156,11 @@ const VaccinationSchedule: React.FC = () => {
       }))
       .sort((a, b) => {
         if (a.vaccineName === b.vaccineName) {
-          return a.expectedVaccineDate.getTime() - b.expectedVaccineDate.getTime();
+          return a.dateToShow.getTime() - b.dateToShow.getTime();
         }
         return a.vaccineName.localeCompare(b.vaccineName);
-      });
-
+      });      
+    // Configurar rowSpan
     let lastVaccineName = '';
     let rowSpan = 0;
     for (let i = 0; i < sortedVaccinations.length; i++) {
@@ -143,9 +172,13 @@ const VaccinationSchedule: React.FC = () => {
         sortedVaccinations[i].rowSpan = 0;
       }
     }
-
+    console.log(sortedVaccinations)
     return sortedVaccinations;
   };
+  
+  
+  
+  
 
   const getVaccineColor = (vaccineName: string) => {
     switch (vaccineName) {
@@ -212,11 +245,11 @@ const VaccinationSchedule: React.FC = () => {
       }),
     },
     {
-      title: 'DÓSIS',
+      title: 'MES',
       dataIndex: 'dose',
       key: 'dose',
       width: 100,
-      render: (dose: number) => `Dosis ${dose}`,
+      render: (dose: string) => dose,
     },
     {
       title: 'FECHA DE VACUNACIÓN',
@@ -228,6 +261,7 @@ const VaccinationSchedule: React.FC = () => {
           className={
             record.type === 'Aplicada' ? 'date-aplicada' : 
             record.type === 'Atrasada' ? 'date-atrasada' : 
+            record.type === 'Confirmada' ? 'date-confirmacion' : 
             'date-próxima'
           }
         >
@@ -236,10 +270,10 @@ const VaccinationSchedule: React.FC = () => {
       ),
     },
     {
-      title: 'Aplicar',
+      title: 'ACCIONES',
       key: 'apply',
       render: (text: string, record: VaccinationTableData) => (
-        (record.type === 'Próxima' || record.type === 'Atrasada') ? (
+        (record.type === 'Próxima' || record.type === 'Atrasada' || record.type === 'Confirmada') ? (
           <Button 
             type="primary" 
             onClick={() => applyVaccine(record.key, record.month)}
@@ -251,13 +285,21 @@ const VaccinationSchedule: React.FC = () => {
     },
   ];
 
-  const data = childData ? combineAndSortVaccinations(childData.notifications, childData.upcomingVaccinations, childData.appliedVaccinations) : [];
+  const data = childData ? combineAndSortVaccinations(childData.notifications, childData.upcomingVaccinations, childData.appliedVaccinations, childData.confirmedVaccinations) : [];
 
   return (
     <div>
       {childData ? (
         <>
           <h2>{childData.childName}</h2>
+          <div className="indicator-container">
+            <div className="indicator indicator-red"></div>
+            <div className="indicator-label">Retrasada</div>
+            <div className="indicator indicator-green"></div>
+            <div className="indicator-label">Aplicada</div>
+            <div className="indicator indicator-orange"></div>
+            <div className="indicator-label">Confirmada</div>
+          </div>
           <Table
             columns={columns}
             dataSource={data}
